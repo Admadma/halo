@@ -1,0 +1,49 @@
+--1. feladat
+select  vezeteknev||' '||keresztnev nev
+    from konyvtar.tag
+    where olvasojegyszam in (select tag_azon
+                                from konyvtar.kolcsonzes kol left join
+                                KONYVTAR.konyvtari_konyv kk on
+                                kol.leltari_szam=kk.leltari_szam
+                                where ertek > 10000);
+                                
+                                
+                                
+--2. feladat
+select kv.cim, count(ksz.szerzo_azon) szerzok_szama
+    from konyvtar.konyv kv left join
+    konyvtar.konyvszerzo ksz
+    on kv.konyv_azon=ksz.konyv_azon
+    group by ksz.konyv_azon, kv.cim;
+
+--3. feladat
+delete
+    from KONYVTAR.kolcsonzes kol
+    where kesedelmi_dij > (select ertek * 10
+                            from KONYVTAR.konyvtari_konyv kk
+                            where kk.leltari_szam=kol.leltari_szam);
+                            
+                            
+--4. feladat
+update konyvtar.konyvszerzo
+    set honorarium=honorarium*0.9
+        where konyv_azon in (select konyv_azon
+                                from konyvtar.konyv kv
+                                where oldalszam = (select min(oldalszam)
+                                                    from konyvtar.konyv kv));
+
+
+--5. feladat
+select keresztnev||' '||vezeteknev nev, bs.leltari_szam
+    from konyvtar.tag tg left join
+    (select kol.leltari_szam, kol.tag_azon
+        from konyvtar.kolcsonzes kol left join
+        konyvtar.konyvtari_konyv kk on
+        kol.leltari_szam=kk.leltari_szam
+        where (kol.tag_azon, kk.ertek) in (select kol.tag_azon, min(kk.ertek)
+                                        from konyvtar.kolcsonzes kol left join
+                                        konyvtar.konyvtari_konyv kk on
+                                        kol.leltari_szam=kk.leltari_szam
+                                        group by tag_azon)
+        group by kol.leltari_szam, kol.tag_azon) bs
+    on tg.olvasojegyszam=bs.tag_azon;
